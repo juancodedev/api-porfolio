@@ -2,19 +2,20 @@ const express = require('express')
 const { Pool } = require('pg')
 const https = require('https');
 
-
 const app = express()
 const cors = require('cors');
 app.use(cors())
 require('dotenv').config()
-
-
 
 const pool = new Pool({
   connectionString: process.env.STRING_DB,
 })
 
 app.use(express.json());
+
+app.get('/', (req, res)=>{
+  res.send('API REST')
+})
 
 app.get('/sql', async (request, response)=>{
 

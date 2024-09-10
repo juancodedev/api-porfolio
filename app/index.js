@@ -1,21 +1,13 @@
-const express = require("express");
+const express = require('express')
+const { Pool } = require('pg')
+const https = require('https');
 const app = express();
 
 const port = process.env.PORT || 3001;
 
-app.get("/", (req, res) => {
-  const htmlResponse = `
-    <html>
-      <head>
-        <title>NodeJs y Express en Vercel</title>
-      </head>
-      <body>
-        <h1>Soy un proyecto Back end en vercel</h1>
-      </body>
-    </html>
-  `;
-  res.send(htmlResponse);
-});
+app.get('/', (req, res)=>{
+    res.send('API REST')
+  })
 
 app.listen(port, () => {
   console.log(`port runing in http://localhost:${port}`);

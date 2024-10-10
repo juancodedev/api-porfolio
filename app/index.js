@@ -11,6 +11,8 @@ const cors = require("cors");
 app.use(cors());
 require("dotenv").config();
 
+WEBHOOK_VERIFY_TOKEN ="Gy30-mhc-NvAT[J,}bDGeS3HfiXn:C"
+
 const pool = new Pool({
   connectionString: process.env.STRING_DB,
 });

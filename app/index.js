@@ -149,6 +149,40 @@ app.get("/webhook", (req, res) => {
   }
 });
 
+app.post("/sendmessage", async(req,res)=>{
+  const message = "mensaje de prueba"
+  const recipient_number = process.env.GRAPH_API_TOKEN
+  console.log('body: ', req.body)
+
+  try {
+    const response = await axios({
+      method: "POST",
+      url: `https://graph.facebook.com/v18.0/me/messages`,
+      headers: {
+        Authorization: `Bearer ${process.env.GRAPH_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      data: {
+        messaging_product: "whatsapp",
+        recipient: {
+          whatsapp_number: recipient_number,
+        },
+        message: {
+          text: {
+            body: message,
+          },
+        },
+      },
+    });
+    console.log(response.data);
+    res.sendStatus(200);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+})
+
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () =>
   console.log(`Server running at http://localhost:${PORT}/`)

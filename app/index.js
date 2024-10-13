@@ -164,7 +164,7 @@ app.post("/webhook", async (req, res) => {
       method: "POST",
       url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
       headers: {
-        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       data: {
         messaging_product: "whatsapp",

@@ -112,14 +112,10 @@ app.post("/sql/agregar", async (req, res) => {
     result.data = resultadoSQL.rows[0];
     result.status = res.statusCode;
     result.message = "Registro agregado correctamente";
+    sendMessageWsp(req.body);
 
     res.send(JSON.stringify(result));
     res.end();
-    try {
-      sendMessageWsp(req.body);
-    } catch (error) {
-      console.log(error);
-    }
   } catch (error) {
     res.status(500);
     result.data = req.body;

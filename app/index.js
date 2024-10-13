@@ -113,6 +113,8 @@ app.post("/sql/agregar", async (req, res) => {
     result.status = res.statusCode;
     result.message = "Registro agregado correctamente";
     sendMessageWsp(req.body);
+    console.log(sendMessageWsp)
+    console.log(req.body)
 
     res.send(JSON.stringify(result));
     res.end();
@@ -268,6 +270,7 @@ app.get("/webhook", (req, res) => {
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
+  console.log({process})
   console.log(`Server running at http://localhost:${PORT}/`);
 });
 

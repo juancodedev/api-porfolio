@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 const express = require("express");
 const { Pool } = require("pg");
 const https = require("https");
@@ -11,7 +9,9 @@ const cors = require("cors");
 app.use(cors());
 require("dotenv").config();
 
-WEBHOOK_VERIFY_TOKEN ="Gy30-mhc-NvAT[J,}bDGeS3HfiXn:C"
+WEBHOOK_VERIFY_TOKEN = "Gy30-mhc-NvAT[J,}bDGeS3HfiXn:C";
+GRAPH_API_TOKEN = "EAAHxpNBEivABOZC2DuPAlguAUNRDzZAPW3tN90rg1ThsuXVpmKSg8xo1Ol9kB9IudOpSc7JjR1lxD73UB9HKyfATQ3zI7r3njA34sZCIyEKg86MZBGmeo9uB9GsT4CwQLpojMVd4KWEXkOypra0cZAYtp8sI8p8GSPFRuoq6ySDMyCqUKvA02wObd0JZAcvgCnHwZDZD"
+
 
 const pool = new Pool({
   connectionString: process.env.STRING_DB,
@@ -85,7 +85,7 @@ app.post("/sql/agregar", async (req, res) => {
   }
 });
 
-app.post("/webhook", async(req,res) =>{
+app.post("/webhook", async (req, res) => {
   console.log("Incoming webhook message:", JSON.stringify(req.body, null, 2));
   // check if the webhook request contains a message
   // details on WhatsApp text message payload: https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/payload-examples#text-messages
@@ -129,7 +129,7 @@ app.post("/webhook", async(req,res) =>{
   }
 
   res.sendStatus(200);
-} )
+});
 
 // accepts GET requests at the /webhook endpoint. You need this URL to setup webhook initially.
 // info on verification request payload: https://developers.facebook.com/docs/graph-api/webhooks/getting-started#verification-requests
@@ -149,39 +149,81 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-app.post("/sendmessage", async(req,res)=>{
-  const message = "mensaje de prueba"
-  const recipient_number = process.env.GRAPH_API_TOKEN
-  console.log('body: ', req.body)
+app.post("/sendmessage", async (req, res) => {
+  const recipient_number = "56998307778"; // Puedes cambiarlo a req.body.to si se recibe dinámicamente
+  const accessToken = GRAPH_API_TOKEN //process.env.GRAPH_API_TOKEN; // Asegúrate de tener el token en tu .env
 
   try {
-    const response = await axios({
-      method: "POST",
-      url: `https://graph.facebook.com/v18.0/me/messages`,
-      headers: {
-        Authorization: `Bearer ${process.env.GRAPH_API_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      data: {
-        messaging_product: "whatsapp",
-        recipient: {
-          whatsapp_number: recipient_number,
+    const response = await axios.post(
+      "https://graph.facebook.com/v21.0/102007099648965/messages",
+      null,
+      {
+        params: {
+          _reqName: "object:phone-number-id/messages",
+          _reqSrc: "WhatsAppBusinessSendMessageCAPI",
+          locale: "es_LA",
+          messaging_product: "whatsapp",
+          template: JSON.stringify({
+            name: "hello_world",
+            language: { code: "en_US" },
+          }),
+          to: recipient_number.replace("+", ""), // Elimina el "+" para el número de teléfono
+          type: "template",
+          xref: "f939e996f430936da",
+          access_token: accessToken,
         },
-        message: {
-          text: {
-            body: message,
-          },
-        },
-      },
-    });
-    console.log(response.data);
+      }
+    );
+
+    console.log("Message sent:", response.data);
     res.sendStatus(200);
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Error sending message:",
+      error.response ? error.response.data : error.message
+    );
     res.sendStatus(500);
   }
-})
+});
 
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
+
+// app.post("/sendmessage", async(req,res)=>{
+//   const message = "mensaje de prueba"
+//   const recipient_number = '+56998307778' //process.env.GRAPH_API_TOKEN
+//   console.log(recipient_number)
+//   console.log('body: ', req.body)
+
+//   try {
+//     const response = await axios({
+//       method: "POST",
+//       url: `https://graph.facebook.com/v18.0/me/messages`,
+//       headers: {
+//         Authorization: `Bearer ${process.env.GRAPH_API_TOKEN}`,
+//         "Content-Type": "application/json",
+//       },
+//       data: {
+//         messaging_product: "whatsapp",
+//         recipient: {
+//           whatsapp_number: recipient_number,
+//         },
+//         message: {
+//           text: {
+//             body: message,
+//           },
+//         },
+//       },
+//     });
+//     console.log(response.data);
+//     res.sendStatus(200);
+//   } catch (error) {
+//     console.error(error);
+//     res.sendStatus(500);
+//   }
+// })
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () =>

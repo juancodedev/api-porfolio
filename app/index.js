@@ -1,17 +1,59 @@
 const express = require("express");
 const { Pool } = require("pg");
-const https = require("https");
 const bodyParser = require("body-parser");
-const axios = require("axios");
+const axios = require("axios").default;
 
 const app = express();
 const cors = require("cors");
 app.use(cors());
 require("dotenv").config();
 
-WEBHOOK_VERIFY_TOKEN = "Gy30-mhc-NvAT[J,}bDGeS3HfiXn:C";
-GRAPH_API_TOKEN = "EAAHxpNBEivABOZC2DuPAlguAUNRDzZAPW3tN90rg1ThsuXVpmKSg8xo1Ol9kB9IudOpSc7JjR1lxD73UB9HKyfATQ3zI7r3njA34sZCIyEKg86MZBGmeo9uB9GsT4CwQLpojMVd4KWEXkOypra0cZAYtp8sI8p8GSPFRuoq6ySDMyCqUKvA02wObd0JZAcvgCnHwZDZD"
+async function sendMessageWsp(params) {
+  const recipientNumber = process.env.NUMBER; // Puedes cambiarlo a req.body.to si se recibe dinámicamente
+  const accessToken = process.env.GRAPH_API_TOKEN; //process.env.GRAPH_API_TOKEN; // Asegúrate de tener el token en tu .env
+  const url = process.env.URL;
+  // const { Message, Email, firstName, LastName, Phone, Service } = params
+  const {
+    message,
+    email_address,
+    first_name,
+    last_name,
+    phone_number,
+    services,
+  } = params;
 
+  const messageWsp = `Tienes un mensaje de ${first_name} ${last_name}
+con el correo: ${email_address}
+Teléfono: ${phone_number}
+Servicio: *${services}*
+
+Mensaje: ${message}`; // Puedes personalizar el mensaje según tus necesidades
+
+  const payload = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: recipientNumber,
+    type: "text",
+    text: {
+      preview_url: false,
+      body: messageWsp,
+    },
+  };
+  try {
+    const response = await axios
+      .post(url, payload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    console.log("Message sent:", response.data);
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response ? error.response.data : error.message
+    );
+  }
+}
 
 const pool = new Pool({
   connectionString: process.env.STRING_DB,
@@ -48,7 +90,6 @@ app.post("/sql/agregar", async (req, res) => {
     services,
     message,
   } = req.body;
-  // console.log('body: ', req.body)
 
   const dateNow = new Date();
   try {
@@ -71,10 +112,14 @@ app.post("/sql/agregar", async (req, res) => {
     result.data = resultadoSQL.rows[0];
     result.status = res.statusCode;
     result.message = "Registro agregado correctamente";
-    console.log(result);
 
     res.send(JSON.stringify(result));
     res.end();
+    try {
+      sendMessageWsp(req.body);
+    } catch (error) {
+      console.log(error);
+    }
   } catch (error) {
     res.status(500);
     result.data = req.body;
@@ -87,6 +132,7 @@ app.post("/sql/agregar", async (req, res) => {
 
 app.post("/webhook", async (req, res) => {
   console.log("Incoming webhook message:", JSON.stringify(req.body, null, 2));
+  const accessToken = process.env.GRAPH_API_TOKEN;
   // check if the webhook request contains a message
   // details on WhatsApp text message payload: https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/payload-examples#text-messages
   const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
@@ -99,9 +145,9 @@ app.post("/webhook", async (req, res) => {
     // send a reply message as per the docs here https://developers.facebook.com/docs/whatsapp/cloud-api/reference/messages
     await axios({
       method: "POST",
-      url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
+      url: `https://graph.facebook.com/v20.0/${business_phone_number_id}/messages`,
       headers: {
-        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       data: {
         messaging_product: "whatsapp",
@@ -137,9 +183,10 @@ app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
+  const verify_token = process.env.WEBHOOK_VERIFY_TOKEN;
 
   // check the mode and token sent are correct
-  if (mode === "subscribe" && token === WEBHOOK_VERIFY_TOKEN) {
+  if (mode === "subscribe" && token === verify_token) {
     // respond with 200 OK and challenge token from the request
     res.status(200).send(challenge);
     console.log("Webhook verified successfully!");
@@ -149,46 +196,44 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-app.post("/sendmessage", async (req, res) => {
-  const recipient_number = "56998307778"; // Puedes cambiarlo a req.body.to si se recibe dinámicamente
-  const accessToken = GRAPH_API_TOKEN //process.env.GRAPH_API_TOKEN; // Asegúrate de tener el token en tu .env
-
-  try {
-    const response = await axios.post(
-      "https://graph.facebook.com/v21.0/102007099648965/messages",
-      null,
-      {
-        params: {
-          _reqName: "object:phone-number-id/messages",
-          _reqSrc: "WhatsAppBusinessSendMessageCAPI",
-          locale: "es_LA",
-          messaging_product: "whatsapp",
-          template: JSON.stringify({
-            name: "hello_world",
-            language: { code: "en_US" },
-          }),
-          to: recipient_number.replace("+", ""), // Elimina el "+" para el número de teléfono
-          type: "template",
-          xref: "f939e996f430936da",
-          access_token: accessToken,
-        },
-      }
-    );
-
-    console.log("Message sent:", response.data);
-    res.sendStatus(200);
-  } catch (error) {
-    console.error(
-      "Error sending message:",
-      error.response ? error.response.data : error.message
-    );
-    res.sendStatus(500);
-  }
-});
-
-// const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
+// app.post("/sendmessage", async (req, res) => {
+//   const recipient_number = "56998307778"; // Puedes cambiarlo a req.body.to si se recibe dinámicamente
+//   const accessToken = GRAPH_API_TOKEN; //process.env.GRAPH_API_TOKEN; // Asegúrate de tener el token en tu .env
+//   url = "https://graph.facebook.com/v20.0/102007099648965/messages";
+//   payload = {
+//     messaging_product: "whatsapp",
+//     recipient_type: "individual",
+//     to: recipient_number,
+//     type: "text",
+//     text: {
+//       preview_url: false,
+//       body: "Esta es una prueba de mensaje",
+//     },
+//   };
+//   try {
+//     const response = await axios
+//       .post(url, payload, {
+//         headers: {
+//           Authorization: `Bearer ${accessToken}`,
+//         },
+//       })
+//       .then((response) => {
+//         console.log(response);
+//         res.sendStatus(200);
+//       })
+//       .catch((error) => {
+//         console.error("Error sending message:", error.message);
+//         res.sendStatus(500);
+//       });
+//     console.log("Message sent:", response.data);
+//     res.sendStatus(200);
+//   } catch (error) {
+//     console.error(
+//       "Error sending message:",
+//       error.response ? error.response.data : error.message
+//     );
+//     res.sendStatus(500);
+//   }
 // });
 
 // app.post("/sendmessage", async(req,res)=>{
@@ -225,10 +270,10 @@ app.post("/sendmessage", async (req, res) => {
 //   }
 // })
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () =>
-  console.log(`Server running at http://localhost:${PORT}/`)
-);
+const PORT = process.env.PORT;
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}/`);
+});
 
 // // Configurar cabeceras para autenticar la API de WhatsApp
 // const headers = {

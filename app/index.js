@@ -46,7 +46,7 @@ Mensaje: ${message}`; // Puedes personalizar el mensaje según tus necesidades
           Authorization: `Bearer ${accessToken}`,
         },
       });
-    console.log("Message sent:", response.data);
+    // console.log("Message sent:", response.data);
   } catch (error) {
     console.error(
       "Error sending message:",
@@ -71,7 +71,7 @@ app.get("/", (req, res) => {
 app.get("/sql", async (request, response) => {
   // const resultadoSQL = await sql<Contact>`SELECT * FROM contacts`;
   const resultadoSQL = await pool.query("SELECT * FROM contacts");
-  console.log(resultadoSQL.rows);
+  // console.log(resultadoSQL.rows);
 
   response.send(JSON.stringify(resultadoSQL.rows));
 });
@@ -113,8 +113,8 @@ app.post("/sql/agregar", async (req, res) => {
     result.status = res.statusCode;
     result.message = "Registro agregado correctamente";
     sendMessageWsp(req.body);
-    console.log(sendMessageWsp)
-    console.log(req.body)
+    // console.log(sendMessageWsp)
+    // console.log(req.body)
 
     res.send(JSON.stringify(result));
     res.end();
@@ -270,7 +270,7 @@ app.get("/webhook", (req, res) => {
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
-  console.log({process})
+  // console.log({process})
   console.log(`Server running at http://localhost:${PORT}/`);
 });
 

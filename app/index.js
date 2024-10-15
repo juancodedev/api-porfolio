@@ -8,7 +8,7 @@ const cors = require("cors");
 app.use(cors());
 require("dotenv").config();
 
-async function sendMessageWsp(params) {
+function sendMessageWsp(params) {
   const recipientNumber = process.env.NUMBER; // Puedes cambiarlo a req.body.to si se recibe dinámicamente
   const accessToken = process.env.GRAPH_API_TOKEN; //process.env.GRAPH_API_TOKEN; // Asegúrate de tener el token en tu .env
   const url = process.env.URL;
@@ -40,7 +40,7 @@ Mensaje: ${message}`; // Puedes personalizar el mensaje según tus necesidades
     },
   };
   try {
-    const response = await axios
+    const response = axios
       .post(url, payload, {
         headers: {
           Authorization: `Bearer ${accessToken}`,

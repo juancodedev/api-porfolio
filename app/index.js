@@ -8,6 +8,71 @@ const cors = require("cors");
 app.use(cors());
 require("dotenv").config();
 
+
+// async function sendTextMessage() {
+//   // const phone_number_id = process.env.ID_APP
+//   // const phone_number = process.env.NUMBER
+//   const response = await axios({
+//       url: 'https://graph.facebook.com/v20.0/476473675545793/messages',
+//       method: 'post',
+//       headers: {
+//           'Authorization': 'Bearer EAAPFGO0rFrcBO3miZBThxa6ouWokX6mrZBfGJgGDwZCzlmZAV9p1Hwcp6ydaZCs0hZBFP2CMWcbNXrobxOYLCzgZBYpmMHrCinumyK9T1S5tHgh4xp0IJZB63YvZCpLAnwacCTN6Gu0ShN86QSMkyeqtZCUYi1UGURM7LzZBxvuUTxDSDIb3RoQdWYnaXaEjmo1WGqB0gZDZD',
+//           'Content-Type': 'application/json'
+//       },
+//       data: JSON.stringify({
+//           messaging_product: 'whatsapp',
+//           to: "56998307778",
+//           type: 'text',
+//           text:{
+//               body: 'This is a text message'
+//           }
+//       })
+//   })
+
+//   console.log(response.data) 
+// }
+
+async function sendTextMessage(params) {
+  const phone_number_id = process.env.ID_APP
+  const phone = process.env.NUMBER
+  const {
+    message,
+    email_address,
+    first_name,
+    last_name,
+    phone_number,
+    services,
+  } = params;
+
+  const messageWsp = `Tienes un mensaje de ${first_name} ${last_name}
+con el correo: ${email_address}
+Teléfono: ${phone_number}
+Servicio: *${services}*
+
+Mensaje: ${message}`;
+
+  const response = await axios({
+      url: `https://graph.facebook.com/v20.0/${phone_number_id}/messages`,
+      method: 'post',
+      headers: {
+          'Authorization': `Bearer ${process.env.TOKEN_24HRS}`,
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: phone,
+          type: 'text',
+          text:{
+              body: messageWsp
+          }
+      })
+  })
+
+  console.log(response.data) 
+}
+
+
+
 function sendMessageWsp(params) {
   const recipientNumber = process.env.NUMBER; // Puedes cambiarlo a req.body.to si se recibe dinámicamente
   const accessToken = process.env.GRAPH_API_TOKEN; //process.env.GRAPH_API_TOKEN; // Asegúrate de tener el token en tu .env
@@ -33,14 +98,16 @@ Mensaje: ${message}`; // Puedes personalizar el mensaje según tus necesidades
     messaging_product: "whatsapp",
     recipient_type: "individual",
     to: recipientNumber,
-    type: "text",
-    text: {
-      preview_url: false,
-      body: messageWsp,
-    },
+    type: "template",
+    template:
+      { name: "payment_scheduled_2", 
+        language: 
+        { code: "LANGUAGE_AND_LOCALE_CODE" } 
+      } 
   };
+
   try {
-    const response = axios
+    axios
       .post(url, payload, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -112,7 +179,8 @@ app.post("/sql/agregar", async (req, res) => {
     result.data = resultadoSQL.rows[0];
     result.status = res.statusCode;
     result.message = "Registro agregado correctamente";
-    sendMessageWsp(req.body);
+    // sendMessageWsp(req.body);
+    sendTextMessage(req.body);
     // console.log(sendMessageWsp)
     // console.log(req.body)
 

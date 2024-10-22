@@ -8,7 +8,6 @@ const cors = require("cors");
 app.use(cors());
 require("dotenv").config();
 
-
 // async function sendTextMessage() {
 //   // const phone_number_id = process.env.ID_APP
 //   // const phone_number = process.env.NUMBER
@@ -29,12 +28,12 @@ require("dotenv").config();
 //       })
 //   })
 
-//   console.log(response.data) 
+//   console.log(response.data)
 // }
 
 async function sendTextMessage(params) {
-  const phone_number_id = process.env.ID_APP
-  const phone = process.env.NUMBER
+  const phone_number_id = process.env.ID_APP;
+  const phone = process.env.NUMBER;
   const {
     message,
     email_address,
@@ -44,34 +43,59 @@ async function sendTextMessage(params) {
     services,
   } = params;
 
-  const messageWsp = `Tienes un mensaje de ${first_name} ${last_name}
-con el correo: ${email_address}
-Teléfono: ${phone_number}
-Servicio: *${services}*
-
-Mensaje: ${message}`;
+const TOKEN = 'EAAPFGO0rFrcBO2BsGZAcTCe9Fio74DK4ZBVAj2vwVvDZB3oaqofFwkOrLBRw8GzEDYDpKxiHqOsZCmkHazwOPiMtwn6P206uuYqct9HeNkRRcONZBtwJvVk1fnvH4l9lyxSR2cs4RIaEkES3P9PHWR6mRPEZBnnMls1NE113MSBZCICwv9wqDpwWTRsHuaZApCpHtQZDZD'
 
   const response = await axios({
-      url: `https://graph.facebook.com/v20.0/${phone_number_id}/messages`,
-      method: 'post',
-      headers: {
-          'Authorization': `Bearer ${process.env.TOKEN_24HRS}`,
-          'Content-Type': 'application/json'
+    url: `https://graph.facebook.com/v20.0/${phone_number_id}/messages`,
+    method: "post",
+    //${process.env.WHATSAPP_TOKEN}
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    data: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: phone,
+      type: "template",
+      template: {
+        name: "statement_available_2",
+        language: {
+          code: "es",
+        },
+          components:[
+            {
+              type: "body",
+              parameters: [
+                {
+                  type: "text",
+                  text: `${first_name} ${last_name}`,
+                },
+                {
+                  type: "text",
+                  text: `${email_address}`,
+                },
+                {
+                  type: "text",
+                  text: `${phone_number}`,
+                },
+                {
+                  type: "text",
+                  text: `*${services}*`,
+                },
+                {
+                  type: "text",
+                  text: `${message}`,
+                },
+              ],
+            },
+          ]
+        },
       },
-      data: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: phone,
-          type: 'text',
-          text:{
-              body: messageWsp
-          }
-      })
-  })
+    ),
+  });
 
-  console.log(response.data) 
+  console.log(response.data);
 }
-
-
 
 function sendMessageWsp(params) {
   const recipientNumber = process.env.NUMBER; // Puedes cambiarlo a req.body.to si se recibe dinámicamente
@@ -99,20 +123,18 @@ Mensaje: ${message}`; // Puedes personalizar el mensaje según tus necesidades
     recipient_type: "individual",
     to: recipientNumber,
     type: "template",
-    template:
-      { name: "payment_scheduled_2", 
-        language: 
-        { code: "LANGUAGE_AND_LOCALE_CODE" } 
-      } 
+    template: {
+      name: "payment_scheduled_2",
+      language: { code: "LANGUAGE_AND_LOCALE_CODE" },
+    },
   };
 
   try {
-    axios
-      .post(url, payload, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+    axios.post(url, payload, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     // console.log("Message sent:", response.data);
   } catch (error) {
     console.error(

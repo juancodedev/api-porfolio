@@ -157,6 +157,45 @@ app.get("/", (req, res) => {
   res.send("API REST");
 });
 
+app.post("/send", (req, response) => {
+  const token = 'Bearer EAAPFGO0rFrcBO2BsGZAcTCe9Fio74DK4ZBVAj2vwVvDZB3oaqofFwkOrLBRw8GzEDYDpKxiHqOsZCmkHazwOPiMtwn6P206uuYqct9HeNkRRcONZBtwJvVk1fnvH4l9lyxSR2cs4RIaEkES3P9PHWR6mRPEZBnnMls1NE113MSBZCICwv9wqDpwWTRsHuaZApCpHtQZDZD'
+
+  const url = 'https://graph.facebook.com/v20.0/476473675545793/messages';
+  // const token = 'Bearer EAAPFGO0rFrcBO3miZBThxa6ouWokX6mrZBfGJgGDwZCzlmZAV9p1Hwcp6ydaZCs0hZBFP2CMWcbNXrobxOYLCzgZBYpmMHrCinumyK9T1S5tHgh4xp0IJZB63YvZCpLAnwacCTN6Gu0ShN86QSMkyeqtZCUYi1UGURM7LzZBxvuUTxDSDIb3RoQdWYnaXaEjmo1WGqB0gZDZD';
+  
+  const data = {
+      messaging_product: 'whatsapp',
+      to: "56998307778",
+      type: 'text',
+      text: {
+          body: 'This is a text message'
+      }
+  };
+  
+  fetch(url, {
+      method: 'POST',
+      headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+  })
+  .then(response => {
+      if (!response.ok) {
+          throw new Error('Network response was not ok ' + response.statusText);
+      }
+      return response.json(); // Parsear la respuesta JSON
+  })
+  .then(data => {
+      console.log('Success:', data); // Manejar la respuesta exitosa
+  })
+  .catch((error) => {
+      console.error('Error:', error); // Manejar errores
+  });
+
+  console.log(response.data)
+});
+
 app.get("/sql", async (request, response) => {
   // const resultadoSQL = await sql<Contact>`SELECT * FROM contacts`;
   const resultadoSQL = await pool.query("SELECT * FROM contacts");
